@@ -1,17 +1,13 @@
-FROM python:3.9-slim-buster as builder
-RUN apt-get update \
-    && apt-get install -y build-essential \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+FROM python:3.10
+
 COPY requirements.txt .
 COPY requirements_advanced.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
-# RUN pip install --user --no-cache-dir -r requirements_advanced.txt
 
-FROM python:3.9-slim-buster
-LABEL maintainer="iskoldt"
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+RUN pip install -r requirements.txt
+RUN pip install opentelemetry-distro==0.41b0 opentelemetry-exporter-otlp==1.20.0
+
+RUN opentelemetry-bootstrap -a install
+
 COPY . /app
 WORKDIR /app
 ENV dockerrun=yes

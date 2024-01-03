@@ -793,15 +793,63 @@ with gr.Blocks(theme=small_and_beautiful_theme) as demo:
 # 默认开启本地服务器，默认可以直接从IP访问，默认不创建公开分享链接
 demo.title = i18n("川虎Chat 🚀")
 
+def cw_login(username, password):
+    data = {
+        'username': username,
+        'password': password,
+    }
+    response = requests.post(os.getenv("CW_AUTH_URL"), data=data)
+    result = response.json().get('success')
+    return result
+
+
+def keycloak_login(username, password):
+    data = {
+        'client_id': os.getenv("KEYCLOAK_CLIENT_ID"),
+        'username': username,
+        'password': password,
+        'grant_type': 'password'
+    }
+    response = requests.post(os.getenv("KEYCLOAK_AUTH_URL"), data=data)
+    token = response.json().get('access_token')
+    if token is None:
+        logging.info(f"用户[{username}]登录失败")
+        return False
+    else:
+        logging.info(f"用户[{username}]登录成功")
+        return True
+
+
 if __name__ == "__main__":
     reload_javascript()
     setup_wizard()
-    demo.queue(concurrency_count=CONCURRENT_COUNT).launch(
-        allowed_paths=["history", "web_assets"],
-        server_name=server_name,
-        server_port=server_port,
-        share=share,
-        auth=auth_from_conf if authflag else None,
-        favicon_path="./web_assets/favicon.ico",
-        inbrowser=autobrowser and not dockerflag,  # 禁止在docker下开启inbrowser
-    )
+    if os.environ["CW_AUTH_URL"] != "":
+        demo.queue(concurrency_count=CONCURRENT_COUNT).launch(
+            allowed_paths=["history", "web_assets"],
+            server_name=server_name,
+            server_port=server_port,
+            share=share,
+            auth=cw_login,
+            favicon_path="./web_assets/favicon.ico",
+            inbrowser=not dockerflag,  # 禁止在docker下开启inbrowser
+        )
+    elif os.environ["KEYCLOAK_AUTH_URL"] != "":
+        demo.queue(concurrency_count=CONCURRENT_COUNT).launch(
+            allowed_paths=["history", "web_assets"],
+            server_name=server_name,
+            server_port=server_port,
+            share=share,
+            auth=keycloak_login,
+            favicon_path="./web_assets/favicon.ico",
+            inbrowser=not dockerflag,  # 禁止在docker下开启inbrowser
+        )
+    else:
+        demo.queue(concurrency_count=CONCURRENT_COUNT).launch(
+            allowed_paths=["history", "web_assets"],
+            server_name=server_name,
+            server_port=server_port,
+            share=share,
+            auth=auth_from_conf if authflag else None,
+            favicon_path="./web_assets/favicon.ico",
+            inbrowser=not dockerflag,  # 禁止在docker下开启inbrowser
+        )
