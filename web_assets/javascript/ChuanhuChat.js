@@ -26,6 +26,7 @@ var sendBtn = null;
 var cancelBtn = null;
 var sliders = null;
 var updateChuanhuBtn = null;
+var rebootChuanhuBtn = null;
 var statusDisplay = null;
 
 var historySelector = null;
@@ -82,6 +83,7 @@ function initialize() {
     cancelBtn = gradioApp().getElementById("cancel-btn");
     sliders = gradioApp().querySelectorAll('input[type="range"]');
     updateChuanhuBtn = gradioApp().getElementById("update-chuanhu-btn");
+    rebootChuanhuBtn = gradioApp().getElementById("reboot-chuanhu-btn");
     statusDisplay = gradioApp().querySelector('#status-display');
 
     historySelector = gradioApp().querySelector('#history-select-dropdown');
@@ -109,6 +111,7 @@ function initialize() {
     setPopupBoxPosition();
     setSlider();
     setCheckboxes();
+    setAutocomplete();
     checkModel();
 
     settingBox.classList.add('hideBox');
@@ -334,6 +337,12 @@ function setChatbotHeight() {
 function setChatbotScroll() {
     var scrollHeight = chatbotWrap.scrollHeight;
     chatbotWrap.scrollTo(0,scrollHeight)
+}
+
+function setAutocomplete() {
+    // 避免API Key被当成密码导致的模型下拉框被当成用户名而引发的浏览器自动填充行为
+    const apiKeyInput = gradioApp().querySelector("#api-key input");
+    apiKeyInput.setAttribute("autocomplete", "new-password");
 }
 
 function clearChatbot(a, b) {
