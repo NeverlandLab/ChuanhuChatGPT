@@ -2,8 +2,8 @@ import json
 
 
 class ConfAuth:
-    @staticmethod
-    def auth(username, password):
+
+    def auth(self, username, password):
         try:
             with open("config.json", encoding="utf-8") as f:
                 conf = json.load(f)
