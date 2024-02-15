@@ -827,21 +827,6 @@ def beautify_err_msg(err_msg):
     return err_msg
 
 
-def conf_auth(username, password):
-    try:
-        with open("config.json", encoding="utf-8") as f:
-            conf = json.load(f)
-        usernames, passwords = [i[0] for i in conf["users"]], [
-            i[1] for i in conf["users"]
-        ]
-        if username in usernames:
-            if passwords[usernames.index(username)] == password:
-                return True
-        return False
-    except:
-        return False
-
-
 def get_file_hash(file_src=None, file_paths=None):
     if file_src:
         file_paths = [x.name for x in file_src]

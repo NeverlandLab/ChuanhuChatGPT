@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 import logging
+from auth.auth_builder import AuthBuilder
 
 logging.basicConfig(
     level=logging.INFO,
@@ -1183,65 +1184,19 @@ with gr.Blocks(theme=small_and_beautiful_theme) as gradio_app:
         _js="(a,b)=>{return bgSelectHistory(a,b);}",
     )
 
-# 默认开启本地服务器，默认可以直接从IP访问，默认不创建公开分享链接
-gradio_app.title = i18n("川虎Chat 🚀")
-
-
-def simple_auth(username, password):
-    data = {
-        "username": username,
-        "password": password,
-    }
-    response = requests.post(os.getenv("SIMPLE_AUTH_URL"), data=data)
-    response.raise_for_status()
-    result = response.json().get("success")
-    return result
-
-
-def keycloak_auth(username, password):
-    data = {
-        "client_id": os.getenv("KEYCLOAK_CLIENT_ID"),
-        "username": username,
-        "password": password,
-        "grant_type": "password",
-    }
-    response = requests.post(os.getenv("KEYCLOAK_AUTH_URL"), data=data)
-    response.raise_for_status()
-    token = response.json().get("access_token")
-    if token is None:
-        logging.info(f"用户[{username}]登录失败")
-        return False
-    else:
-        logging.info(f"用户[{username}]登录成功")
-        return True
-
-
-def build_auth_func():
-    auth_func = None
-    if os.getenv("SIMPLE_AUTH_URL") != "":
-        logging.info("启用简易用户名/密码认证模式")
-        auth_func = simple_auth
-
-    elif os.getenv("KEYCLOAK_AUTH_URL") != "":
-        logging.info("启用KeyCloak认证模式")
-        auth_func = keycloak_auth
-    elif authflag:
-        logging.info("启用配置文件用户名/密码认证模式")
-        auth_func = conf_auth
-    else:
-        logging.info("没有任何用户认证配置,禁用用户认证校验......")
-        auth_func = None
-    return auth_func
-
 
 if __name__ == "__main__":
+    gradio_app.title = i18n("川虎Chat 🚀")
+
     reload_javascript()
     setup_wizard()
+
+    auth_builder = AuthBuilder()
     gradio_app.queue(concurrency_count=CONCURRENT_COUNT).launch(
         allowed_paths=["history", "web_assets"],
         server_name=server_name,
         server_port=server_port,
         share=share,
-        auth=build_auth_func(),
+        auth=auth_builder.build(),
         favicon_path="./web_assets/favicon.ico",
     )
