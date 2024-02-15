@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING, List
 
-import logging
+from loguru import logger
 import json
 import commentjson as cjson
 import os
@@ -110,16 +110,16 @@ class ChuanhuCallbackHandler(BaseCallbackHandler):
         # if llm_prefix is not None:
         #     self.callback(f"\n\n{llm_prefix}")
         if observation_prefix is not None:
-            logging.info(observation_prefix)
+            logger.info(observation_prefix)
         self.callback(output)
         if llm_prefix is not None:
-            logging.info(llm_prefix)
+            logger.info(llm_prefix)
 
     def on_agent_finish(
             self, finish: AgentFinish, color: Optional[str] = None, **kwargs: Any
     ) -> None:
         # self.callback(f"{finish.log}\n\n")
-        logging.info(finish.log)
+        logger.info(finish.log)
 
     def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         """Run on new LLM token. Only available when streaming is enabled."""
@@ -269,7 +269,7 @@ class BaseLLMModel:
         Conversations are stored in self.history, with the most recent question in OpenAI format.
         Should return a generator that yields the next word (str) in the answer.
         """
-        logging.warning(
+        logger.warning(
             "Stream prediction is not implemented. Using at once prediction instead."
         )
         response, _ = self.get_answer_at_once()
@@ -282,7 +282,7 @@ class BaseLLMModel:
         the answer (str)
         total token count (int)
         """
-        logging.warning("at once predict not implemented, using stream predict instead")
+        logger.warning("at once predict not implemented, using stream predict instead")
         response_iter = self.get_answer_stream_iter()
         count = 0
         for response in response_iter:
@@ -291,12 +291,12 @@ class BaseLLMModel:
 
     def billing_info(self):
         """get billing infomation, inplement if needed"""
-        # logging.warning("billing info not implemented, using default")
+        # logger.warning("billing info not implemented, using default")
         return BILLING_NOT_APPLICABLE_MSG
 
     def count_token(self, user_input):
         """get token count from input, implement if needed"""
-        # logging.warning("token count not implemented, using default")
+        # logger.warning("token count not implemented, using default")
         return len(user_input)
 
     def stream_next_chatbot(self, inputs, chatbot, fake_input=None, display_append=""):
@@ -311,7 +311,7 @@ class BaseLLMModel:
 
         user_token_count = self.count_token(inputs)
         self.all_token_counts.append(user_token_count)
-        logging.debug(f"输入token计数: {user_token_count}")
+        logger.debug(f"输入token计数: {user_token_count}")
 
         stream_iter = self.get_answer_stream_iter()
 
@@ -368,7 +368,7 @@ class BaseLLMModel:
         if files:
             index = construct_index(self.api_key, file_src=files)
             status = i18n("总结完成")
-            logging.info(i18n("生成内容总结中……"))
+            logger.info(i18n("生成内容总结中……"))
             os.environ["OPENAI_API_KEY"] = self.api_key
             from langchain.chains.summarize import load_summarize_chain
             from langchain.prompts import PromptTemplate
@@ -418,7 +418,7 @@ class BaseLLMModel:
 
             limited_context = True
             msg = "加载索引中……"
-            logging.info(msg)
+            logger.info(msg)
             index = construct_index(
                 self.api_key,
                 file_src=files,
@@ -426,7 +426,7 @@ class BaseLLMModel:
             )
             assert index is not None, "获取索引失败"
             msg = "索引获取成功，生成回答中……"
-            logging.info(msg)
+            logger.info(msg)
             with retrieve_proxy():
                 retriever = VectorStoreRetriever(
                     vectorstore=index, search_type="similarity", search_kwargs={"k": 6}
@@ -482,7 +482,7 @@ class BaseLLMModel:
                         search_results.append(r)
             reference_results = []
             for idx, result in enumerate(search_results):
-                logging.debug(f"搜索结果{idx + 1}：{result}")
+                logger.debug(f"搜索结果{idx + 1}：{result}")
                 domain_name = urllib3.util.parse_url(result["href"]).host
                 reference_results.append([result["body"], result["href"]])
                 display_append.append(
@@ -525,7 +525,7 @@ class BaseLLMModel:
         status_text = "开始生成回答……"
         trace_id = str(uuid.uuid4())
         if type(inputs) == list:
-            logging.info(
+            logger.info(
                 f"[{trace_id}]用户"
                 + f"{self.user_name}"
                 + "的输入为："
@@ -537,7 +537,7 @@ class BaseLLMModel:
                 + colorama.Style.RESET_ALL
             )
         else:
-            logging.info(
+            logger.info(
                 f"[{trace_id}]用户"
                 + f"{self.user_name}"
                 + "的输入为："
@@ -574,7 +574,7 @@ class BaseLLMModel:
                 and not shared.state.multi_api_key
         ):
             status_text = STANDARD_ERROR_MSG + NO_APIKEY_MSG
-            logging.info(status_text)
+            logger.info(status_text)
             chatbot.append((fake_inputs, ""))
             if len(self.history) == 0:
                 self.history.append(construct_user(fake_inputs))
@@ -586,7 +586,7 @@ class BaseLLMModel:
             return
         elif len(fake_inputs.strip()) == 0:
             status_text = STANDARD_ERROR_MSG + NO_INPUT_MSG
-            logging.info(status_text)
+            logger.info(status_text)
             yield chatbot + [(fake_inputs, "")], status_text
             return
 
@@ -600,7 +600,7 @@ class BaseLLMModel:
 
         try:
             if stream:
-                logging.debug("使用流式传输")
+                logger.debug("使用流式传输")
                 iter = self.stream_next_chatbot(
                     inputs,
                     chatbot,
@@ -610,7 +610,7 @@ class BaseLLMModel:
                 for chatbot, status_text in iter:
                     yield chatbot, status_text
             else:
-                logging.debug("不使用流式传输")
+                logger.debug("不使用流式传输")
                 chatbot, status_text = self.next_chatbot_at_once(
                     inputs,
                     chatbot,
@@ -624,7 +624,7 @@ class BaseLLMModel:
             yield chatbot, status_text
 
         if len(self.history) > 1 and self.history[-1]["content"] != fake_inputs:
-            logging.info(
+            logger.info(
                 f"[{trace_id}]回答为："
                 + colorama.Fore.BLUE
                 + f"{self.history[-1]['content']}"
@@ -649,7 +649,7 @@ class BaseLLMModel:
                 count += 1
                 del self.all_token_counts[0]
                 del self.history[:2]
-            logging.info(status_text)
+            logger.info(status_text)
             status_text = f"为了防止token超限，模型忘记了早期的 {count} 轮对话"
             yield chatbot, status_text
 
@@ -664,7 +664,7 @@ class BaseLLMModel:
             files=None,
             reply_language="中文",
     ):
-        logging.debug("重试中……")
+        logger.debug("重试中……")
         if len(self.history) > 1:
             inputs = self.history[-2]["content"]
             del self.history[-2:]
@@ -692,23 +692,23 @@ class BaseLLMModel:
         )
         for x in iter:
             yield x
-        logging.debug("重试完毕")
+        logger.debug("重试完毕")
 
     # def reduce_token_size(self, chatbot):
-    #     logging.info("开始减少token数量……")
+    #     logger.info("开始减少token数量……")
     #     chatbot, status_text = self.next_chatbot_at_once(
     #         summarize_prompt,
     #         chatbot
     #     )
     #     max_token_count = self.token_upper_limit * REDUCE_TOKEN_FACTOR
     #     num_chat = find_n(self.all_token_counts, max_token_count)
-    #     logging.info(f"previous_token_count: {self.all_token_counts}, keeping {num_chat} chats")
+    #     logger.info(f"previous_token_count: {self.all_token_counts}, keeping {num_chat} chats")
     #     chatbot = chatbot[:-1]
     #     self.history = self.history[-2*num_chat:] if num_chat > 0 else []
     #     self.all_token_counts = self.all_token_counts[-num_chat:] if num_chat > 0 else []
     #     msg = f"保留了最近{num_chat}轮对话"
-    #     logging.info(msg)
-    #     logging.info("减少token数量完毕")
+    #     logger.info(msg)
+    #     logger.info("减少token数量完毕")
     #     return chatbot, msg + "，" + self.token_message(self.all_token_counts if len(self.all_token_counts) > 0 else [0])
 
     def interrupt(self):
@@ -779,7 +779,7 @@ class BaseLLMModel:
         if "*" not in new_access_key:
             self.api_key = new_access_key.strip()
             msg = i18n("API密钥更改为了") + hide_middle_chars(self.api_key)
-            logging.info(msg)
+            logger.info(msg)
             return self.api_key, msg
         else:
             return gr.update(), gr.update()
@@ -908,7 +908,7 @@ class BaseLLMModel:
         save_file(filename, self, chatbot)
 
     def load_chat_history(self, new_history_file_path=None):
-        logging.debug(f"{self.user_name} 加载对话历史中……")
+        logger.debug(f"{self.user_name} 加载对话历史中……")
         if new_history_file_path is not None:
             if type(new_history_file_path) != str:
                 # copy file from new_history_file_path.name to os.path.join(HISTORY_DIR, self.user_name)
@@ -937,7 +937,7 @@ class BaseLLMModel:
                 saved_json = json.load(f)
             try:
                 if type(saved_json["history"][0]) == str:
-                    logging.info("历史记录格式为旧版，正在转换……")
+                    logger.info("历史记录格式为旧版，正在转换……")
                     new_history = []
                     for index, item in enumerate(saved_json["history"]):
                         if index % 2 == 0:
@@ -945,16 +945,16 @@ class BaseLLMModel:
                         else:
                             new_history.append(construct_assistant(item))
                     saved_json["history"] = new_history
-                    logging.info(new_history)
+                    logger.info(new_history)
             except:
                 pass
             if len(saved_json["chatbot"]) < len(saved_json["history"]) // 2:
-                logging.info("Trimming corrupted history...")
+                logger.info("Trimming corrupted history...")
                 saved_json["history"] = saved_json["history"][
                                         -len(saved_json["chatbot"]):
                                         ]
-                logging.info(f"Trimmed history: {saved_json['history']}")
-            logging.debug(f"{self.user_name} 加载对话历史完毕")
+                logger.info(f"Trimmed history: {saved_json['history']}")
+            logger.debug(f"{self.user_name} 加载对话历史完毕")
             self.history = saved_json["history"]
             self.single_turn = saved_json.get("single_turn", self.single_turn)
             self.temperature = saved_json.get("temperature", self.temperature)
@@ -995,7 +995,7 @@ class BaseLLMModel:
             )
         except:
             # 没有对话历史或者对话历史解析失败
-            logging.info(f"没有找到对话历史记录 {self.history_file_path}")
+            logger.info(f"没有找到对话历史记录 {self.history_file_path}")
             self.reset()
             return (
                 os.path.basename(self.history_file_path),
@@ -1031,7 +1031,7 @@ class BaseLLMModel:
             os.remove(md_history_file_path)
             return i18n("删除对话历史成功"), get_history_list(self.user_name), []
         except:
-            logging.info(f"删除对话历史失败 {history_file_path}")
+            logger.info(f"删除对话历史失败 {history_file_path}")
             return (
                 i18n("对话历史") + filename + i18n("已经被删除啦"),
                 get_history_list(self.user_name),

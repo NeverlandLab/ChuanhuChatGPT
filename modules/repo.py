@@ -3,7 +3,7 @@ import os
 import sys
 import subprocess
 from functools import lru_cache
-import logging
+from loguru import logger
 import gradio as gr
 import datetime
 import platform
@@ -152,7 +152,7 @@ def version_time():
         )
         commit_time = commit_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-        # logging.info(f"commit time: {commit_time}")
+        # logger.info(f"commit time: {commit_time}")
     except Exception:
         commit_time = "unknown"
     return commit_time
@@ -235,7 +235,7 @@ def background_update():
                     live=False,
                 )
             except Exception:
-                logging.error(
+                logger.error(
                     f"Update failed in fetching, check your network connection"
                 )
                 return "failed"
@@ -263,7 +263,7 @@ def background_update():
                 )
                 run(f"{git} pull {track_repo} --tags", live=False)
             except Exception:
-                logging.error(f"Update failed in merging")
+                logger.error(f"Update failed in merging")
                 try:
                     run(
                         f"{git} merge --abort",
@@ -273,12 +273,12 @@ def background_update():
                     run(f"{git} branch -D -f {updater_branch}", live=False)
                     run(f"{git} branch -D -f {backup_branch}", live=False)
                     run(f"{git} stash pop", live=False) if need_stash else None
-                    logging.error(
+                    logger.error(
                         f"Update failed, but your file was safely reset to the state before the update."
                     )
                     return "failed"
                 except Exception as e:
-                    logging.error(
+                    logger.error(
                         f"!!!Update failed in resetting, try to reset your files manually. {e}"
                     )
                     return "failed"
@@ -299,7 +299,7 @@ def background_update():
                     run(f"{git} branch -D -f {updater_branch}", live=False)
                     run(f"{git} branch -D -f {backup_branch}", live=False)
                     run(f"{git} stash pop", live=False)
-                    logging.error(
+                    logger.error(
                         f"Update failed in applying your local changes, but your file was safely reset to the state before the update."
                     )
                     return "failed"
@@ -308,7 +308,7 @@ def background_update():
             run(f"{git} branch -D -f {updater_branch}", live=False)
             run(f"{git} branch -D -f {backup_branch}", live=False)
         except Exception as e:
-            logging.error(f"Update failed: {e}")
+            logger.error(f"Update failed: {e}")
             return "failed"
         if need_pip:
             try:
@@ -319,9 +319,9 @@ def background_update():
                     live=False,
                 )
             except Exception:
-                logging.error(f"Update failed in pip install")
+                logger.error(f"Update failed in pip install")
                 return "failed"
         return "success"
     except Exception as e:
-        logging.error(f"Update failed: {e}")
+        logger.error(f"Update failed: {e}")
         return "failed"

@@ -1,6 +1,6 @@
 import os
 import locale
-import logging
+from loguru import logger
 import commentjson as json
 
 class I18nAuto:
@@ -21,8 +21,8 @@ class I18nAuto:
             with open(f"./locale/{language}.json", "r", encoding="utf-8") as f:
                 self.language_map.update(json.load(f))
         else:
-            logging.warning(f"Language file for {language} does not exist. Using English instead.")
-            logging.warning(f"Available languages: {', '.join([x[:-5] for x in os.listdir('./locale')])}")
+            logger.warning(f"Language file for {language} does not exist. Using English instead.")
+            logger.warning(f"Available languages: {', '.join([x[:-5] for x in os.listdir('./locale')])}")
             with open(f"./locale/en_US.json", "r", encoding="utf-8") as f:
                 self.language_map.update(json.load(f))
 
@@ -34,8 +34,8 @@ class I18nAuto:
             with open(f"./locale/{language}.json", "r", encoding="utf-8") as f:
                 self.language_map.update(json.load(f))
         else:
-            logging.warning(f"Language file for {language} does not exist. Using English instead.")
-            logging.warning(f"Available languages: {', '.join([x[:-5] for x in os.listdir('./locale')])}")
+            logger.warning(f"Language file for {language} does not exist. Using English instead.")
+            logger.warning(f"Available languages: {', '.join([x[:-5] for x in os.listdir('./locale')])}")
             with open(f"./locale/en_US.json", "r", encoding="utf-8") as f:
                 self.language_map.update(json.load(f))
 

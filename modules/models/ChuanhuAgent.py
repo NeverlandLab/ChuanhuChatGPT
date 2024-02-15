@@ -38,7 +38,7 @@ from ..index_func import construct_index
 from langchain.callbacks import get_openai_callback
 import os
 import gradio as gr
-import logging
+from loguru import logger
 
 class GoogleSearchInput(BaseModel):
     keywords: str = Field(description="keywords to search")
@@ -68,17 +68,17 @@ class ChuanhuAgent_Client(BaseLLMModel):
             if os.environ.get("GOOGLE_CSE_ID", None) is not None and os.environ.get("GOOGLE_API_KEY", None) is not None:
                 tools_to_enable.append("google-search-results-json")
             else:
-                logging.warning("GOOGLE_CSE_ID and/or GOOGLE_API_KEY not found, google-search-results-json is disabled.")
+                logger.warning("GOOGLE_CSE_ID and/or GOOGLE_API_KEY not found, google-search-results-json is disabled.")
             # if exists WOLFRAM_ALPHA_APPID, enable wolfram-alpha
             if os.environ.get("WOLFRAM_ALPHA_APPID", None) is not None:
                 tools_to_enable.append("wolfram-alpha")
             else:
-                logging.warning("WOLFRAM_ALPHA_APPID not found, wolfram-alpha is disabled.")
+                logger.warning("WOLFRAM_ALPHA_APPID not found, wolfram-alpha is disabled.")
             # if exists SERPAPI_API_KEY, enable serpapi
             if os.environ.get("SERPAPI_API_KEY", None) is not None:
                 tools_to_enable.append("serpapi")
             else:
-                logging.warning("SERPAPI_API_KEY not found, serpapi is disabled.")
+                logger.warning("SERPAPI_API_KEY not found, serpapi is disabled.")
             self.tools = load_tools(tools_to_enable, llm=self.llm)
         else:
             self.tools = load_tools(["ddg-search", "llm-math", "arxiv", "wikipedia"], llm=self.llm)
@@ -130,7 +130,7 @@ class ChuanhuAgent_Client(BaseLLMModel):
             self.index = index
             status = i18n("索引构建完成")
             # Summarize the document
-            logging.info(i18n("生成内容总结中……"))
+            logger.info(i18n("生成内容总结中……"))
             with get_openai_callback() as cb:
                 os.environ["OPENAI_API_KEY"] = self.api_key
                 from langchain.chains.summarize import load_summarize_chain
@@ -141,10 +141,10 @@ class ChuanhuAgent_Client(BaseLLMModel):
                 llm = ChatOpenAI()
                 chain = load_summarize_chain(llm, chain_type="map_reduce", return_intermediate_steps=True, map_prompt=PROMPT, combine_prompt=PROMPT)
                 summary = chain({"input_documents": list(index.docstore.__dict__["_dict"].values())}, return_only_outputs=True)["output_text"]
-                logging.info(f"Summary: {summary}")
+                logger.info(f"Summary: {summary}")
                 self.index_summary = summary
                 chatbot.append((f"Uploaded {len(files)} files", summary))
-            logging.info(cb)
+            logger.info(cb)
         return gr.Files.update(), chatbot, status
 
     def query_index(self, query):
@@ -166,7 +166,7 @@ class ChuanhuAgent_Client(BaseLLMModel):
 
         # 提取所有的文本
         text = ''.join(s.getText() for s in soup.find_all('p'))
-        logging.info(f"Extracted text from {url}")
+        logger.info(f"Extracted text from {url}")
         return text
 
     def summary_url(self, url):

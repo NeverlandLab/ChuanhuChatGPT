@@ -1,7 +1,7 @@
 import base64
 import io
 import json
-import logging
+from loguru import logger
 import os
 import pathlib
 import tempfile
@@ -62,7 +62,7 @@ class Midjourney_Client(XMChat):
             if not os.path.exists(temp):
                 os.makedirs(temp)
             self.temp_path = tempfile.mkdtemp(dir=temp)
-            logging.info("mj temp folder: " + self.temp_path)
+            logger.info("mj temp folder: " + self.temp_path)
         else:
             self.temp_path = None
 
@@ -115,7 +115,7 @@ class Midjourney_Client(XMChat):
             raise Exception('auth not set')
 
         fetch_url = f"{mj_proxy_url}/{path}"
-        # logging.info(f"[MJ Proxy] {action} {fetch_url} params: {data}")
+        # logger.info(f"[MJ Proxy] {action} {fetch_url} params: {data}")
 
         for _ in range(retries):
             try:
@@ -190,7 +190,7 @@ class Midjourney_Client(XMChat):
                              for i in range(4)])
                         return fetch_data.prefix_content + f"{time_cost_str}\n\n{img_str}{upscale_str}{variation_str}"
                     except Exception as e:
-                        logging.error(e)
+                        logger.error(e)
                 return fetch_data.prefix_content + \
                     f"{time_cost_str}[![{fetch_data.task_id}]({img_url})]({img_url}){upscale_str}{variation_str}"
             else:
@@ -209,12 +209,12 @@ class Midjourney_Client(XMChat):
         if files:
             for file in files:
                 if file.name:
-                    logging.info(f"尝试读取图像: {file.name}")
+                    logger.info(f"尝试读取图像: {file.name}")
                     self.try_read_image(file.name)
             if self.image_path is not None:
                 chatbot = chatbot + [((self.image_path,), None)]
             if self.image_bytes is not None:
-                logging.info("使用图片作为输入")
+                logger.info("使用图片作为输入")
         return None, chatbot, None
 
     def reset(self, remain_system_prompt=False):
@@ -281,7 +281,7 @@ class Midjourney_Client(XMChat):
                     while not fetch_data.finished:
                         answer = self.fetch_status(fetch_data)
             except Exception as e:
-                logging.error("submit failed", e)
+                logger.error("submit failed", e)
                 answer = "任务提交错误：" + str(e.args[0]) if e.args else '未知错误'
 
         return answer, tiktoken.get_encoding("cl100k_base").encode(content)
@@ -349,7 +349,7 @@ class Midjourney_Client(XMChat):
                 while not fetch_data.finished:
                     yield self.fetch_status(fetch_data)
         except Exception as e:
-            logging.error('submit failed', e)
+            logger.error('submit failed', e)
             yield "任务提交错误：" + str(e.args[0]) if e.args else '未知错误'
 
     def get_help(self):

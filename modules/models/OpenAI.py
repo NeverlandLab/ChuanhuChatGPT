@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-import logging
+from loguru import logger
 import traceback
 
 import colorama
@@ -77,7 +77,7 @@ class OpenAIClient(BaseLLMModel):
             try:
                 usage_data = self._get_billing_data(usage_url)
             except Exception as e:
-                # logging.error(f"获取API使用情况失败: " + str(e))
+                # logger.error(f"获取API使用情况失败: " + str(e))
                 if "Invalid authorization header" in str(e):
                     return i18n("**获取API使用情况失败**，需在填写`config.json`中正确填写sensitive_id")
                 elif "Incorrect API key provided: sess" in str(e):
@@ -106,7 +106,7 @@ class OpenAIClient(BaseLLMModel):
         except Exception as e:
             import traceback
             traceback.print_exc()
-            logging.error(i18n("获取API使用情况失败:") + str(e))
+            logger.error(i18n("获取API使用情况失败:") + str(e))
             return STANDARD_ERROR_MSG + ERROR_RETRIEVE_MSG
 
     @shared.state.switching_api_key  # 在不开启多账号模式的时候，这个装饰器不会起作用
@@ -114,7 +114,7 @@ class OpenAIClient(BaseLLMModel):
         openai_api_key = self.api_key
         system_prompt = self.system_prompt
         history = self.history
-        logging.debug(colorama.Fore.YELLOW +
+        logger.debug(colorama.Fore.YELLOW +
                       f"{history}" + colorama.Fore.RESET)
         headers = {
             "Content-Type": "application/json",
@@ -151,7 +151,7 @@ class OpenAIClient(BaseLLMModel):
 
         # 如果有自定义的api-host，使用自定义host发送请求，否则使用默认设置发送请求
         if shared.state.chat_completion_url != CHAT_COMPLETION_URL:
-            logging.debug(f"使用自定义API URL: {shared.state.chat_completion_url}")
+            logger.debug(f"使用自定义API URL: {shared.state.chat_completion_url}")
 
         with retrieve_proxy():
             try:
@@ -213,7 +213,7 @@ class OpenAIClient(BaseLLMModel):
                         try:
                             yield chunk["choices"][0]["delta"]["content"]
                         except Exception as e:
-                            # logging.error(f"Error: {e}")
+                            # logger.error(f"Error: {e}")
                             continue
                 except:
                     print(f"ERROR: {chunk}")
@@ -239,7 +239,7 @@ class OpenAIClient(BaseLLMModel):
         }
         # 如果有自定义的api-host，使用自定义host发送请求，否则使用默认设置发送请求
         if shared.state.chat_completion_url != CHAT_COMPLETION_URL:
-            logging.debug(f"使用自定义API URL: {shared.state.chat_completion_url}")
+            logger.debug(f"使用自定义API URL: {shared.state.chat_completion_url}")
 
         with retrieve_proxy():
             response = requests.post(
@@ -268,7 +268,7 @@ class OpenAIClient(BaseLLMModel):
                     content = response["choices"][0]["message"]["content"]
                     filename = replace_special_symbols(content) + ".json"
                 except Exception as e:
-                    logging.info(f"自动命名失败。{e}")
+                    logger.info(f"自动命名失败。{e}")
                     filename = replace_special_symbols(user_question)[:16] + ".json"
                 return self.rename_chat_history(filename, chatbot)
             elif name_chat_method == i18n("第一条提问"):

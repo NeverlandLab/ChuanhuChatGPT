@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import logging
+from loguru import logger
 import os
 import platform
 
@@ -43,15 +43,15 @@ class ChatGLM_Client(BaseLLMModel):
             )
             if torch.cuda.is_available():
                 # run on CUDA
-                logging.info("CUDA is available, using CUDA")
+                logger.info("CUDA is available, using CUDA")
                 model = model.half().cuda()
             # mps加速还存在一些问题，暂时不使用
             elif system_name == "Darwin" and model_path is not None and not quantified:
-                logging.info("Running on macOS, using MPS")
+                logger.info("Running on macOS, using MPS")
                 # running on macOS and model already downloaded
                 model = model.half().to("mps")
             else:
-                logging.info("GPU is not available, using CPU")
+                logger.info("GPU is not available, using CPU")
                 model = model.float()
             model = model.eval()
             CHATGLM_MODEL = model
@@ -64,7 +64,7 @@ class ChatGLM_Client(BaseLLMModel):
     def _get_glm2_style_input(self):
         history = [x["content"] for x in self.history]
         query = history.pop()
-        logging.debug(colorama.Fore.YELLOW +
+        logger.debug(colorama.Fore.YELLOW +
                       f"{history}" + colorama.Fore.RESET)
         assert (
             len(history) % 2 == 0
@@ -104,4 +104,4 @@ class ChatGLM_Client(BaseLLMModel):
         CHATGLM_TOKENIZER = None
         gc.collect()
         torch.cuda.empty_cache()
-        logging.info("ChatGLM model deinitialized")
+        logger.info("ChatGLM model deinitialized")

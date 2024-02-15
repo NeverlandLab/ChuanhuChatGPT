@@ -19,7 +19,7 @@ if TYPE_CHECKING:
         import tensorflow as tf
 
 
-logger = logging.get_logger(__name__)
+logger = logger.get_logger(__name__)
 
 VOCAB_FILES_NAMES = {
     "vocab_file": "vocab.json",

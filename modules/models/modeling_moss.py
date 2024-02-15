@@ -20,7 +20,7 @@ from transformers.utils import (
 from .configuration_moss import MossConfig
 
 
-logger = logging.get_logger(__name__)
+logger = logger.get_logger(__name__)
 
 _CHECKPOINT_FOR_DOC = "fnlp/moss-moon-003-base"
 _CONFIG_FOR_DOC = "MossConfig"

@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 import os
 
 import requests
@@ -18,8 +18,8 @@ class KeyCloakAuth:
         response.raise_for_status()
         token = response.json().get("access_token")
         if token is None:
-            logging.info(f"用户[{username}]登录失败")
+            logger.info(f"用户[{username}]登录失败")
             return False
         else:
-            logging.info(f"用户[{username}]登录成功")
+            logger.info(f"用户[{username}]登录成功")
             return True

@@ -1,4 +1,4 @@
-import logging
+from loguru import logger
 from .base_model import BaseLLMModel
 from .. import shared
 import requests
@@ -36,7 +36,7 @@ class OpenAI_DALLE3_Client(BaseLLMModel):
             timeout = TIMEOUT_ALL
 
         if shared.state.images_completion_url != IMAGES_COMPLETION_URL:
-            logging.debug(f"使用自定义API URL: {shared.state.images_completion_url}")
+            logger.debug(f"使用自定义API URL: {shared.state.images_completion_url}")
 
         with retrieve_proxy():
             try:

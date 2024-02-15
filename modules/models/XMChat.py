@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
-import logging
+from loguru import logger
 import os
 import uuid
 from io import BytesIO
@@ -71,7 +71,7 @@ class XMChat(BaseLLMModel):
             return file_extension in valid_image_extensions
 
         if is_image_file(filepath):
-            logging.info(f"读取图片文件: {filepath}")
+            logger.info(f"读取图片文件: {filepath}")
             self.image_bytes = self.image_to_base64(filepath)
             self.image_path = filepath
         else:
@@ -109,12 +109,12 @@ class XMChat(BaseLLMModel):
         if files:
             for file in files:
                 if file.name:
-                    logging.info(f"尝试读取图像: {file.name}")
+                    logger.info(f"尝试读取图像: {file.name}")
                     self.try_read_image(file.name)
             if self.image_path is not None:
                 chatbot = chatbot + [((self.image_path,), None)]
             if self.image_bytes is not None:
-                logging.info("使用图片作为输入")
+                logger.info("使用图片作为输入")
                 # XMChat的一轮对话中实际上只能处理一张图片
                 self.reset()
                 conv_id = str(uuid.uuid4())
@@ -127,7 +127,7 @@ class XMChat(BaseLLMModel):
                 }
                 response = requests.post(self.url, json=data)
                 response = json.loads(response.text)
-                logging.info(f"图片回复: {response['data']}")
+                logger.info(f"图片回复: {response['data']}")
         return None, chatbot, None
 
     def get_answer_at_once(self):

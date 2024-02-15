@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Type
 from enum import Enum
-import logging
+from loguru import logger
 import commentjson as json
 import os
 import datetime
@@ -435,11 +435,11 @@ def sorted_by_last_modified_time(list, dir):
 
 def get_file_names_by_type(dir, filetypes=[".json"]):
     os.makedirs(dir, exist_ok=True)
-    logging.debug(f"获取文件名列表，目录为{dir}，文件类型为{filetypes}")
+    logger.debug(f"获取文件名列表，目录为{dir}，文件类型为{filetypes}")
     files = []
     for type in filetypes:
         files += [f for f in os.listdir(dir) if f.endswith(type)]
-    logging.debug(f"files are:{files}")
+    logger.debug(f"files are:{files}")
     return files
 
 
@@ -447,7 +447,7 @@ def get_file_names_by_pinyin(dir, filetypes=[".json"]):
     files = get_file_names_by_type(dir, filetypes)
     if files != [""]:
         files = sorted_by_pinyin(files)
-    logging.debug(f"files are:{files}")
+    logger.debug(f"files are:{files}")
     return files
 
 
@@ -460,12 +460,12 @@ def get_file_names_by_last_modified_time(dir, filetypes=[".json"]):
     files = get_file_names_by_type(dir, filetypes)
     if files != [""]:
         files = sorted_by_last_modified_time(files, dir)
-    logging.debug(f"files are:{files}")
+    logger.debug(f"files are:{files}")
     return files
 
 
 def get_history_names(user_name=""):
-    logging.debug(f"从用户 {user_name} 中获取历史记录文件名列表")
+    logger.debug(f"从用户 {user_name} 中获取历史记录文件名列表")
     if user_name == "" and hide_history_when_not_logged_in:
         return []
     else:
@@ -503,7 +503,7 @@ def filter_history(user_name, keyword):
 
 
 def load_template(filename, mode=0):
-    logging.debug(f"加载模板文件{filename}，模式为{mode}（0为返回字典和下拉菜单，1为返回下拉菜单，2为返回字典）")
+    logger.debug(f"加载模板文件{filename}，模式为{mode}（0为返回字典和下拉菜单，1为返回下拉菜单，2为返回字典）")
     lines = []
     if filename.endswith(".json"):
         with open(os.path.join(TEMPLATES_DIR, filename), "r", encoding="utf8") as f:
@@ -526,18 +526,18 @@ def load_template(filename, mode=0):
 
 
 def get_template_names():
-    logging.debug("获取模板文件名列表")
+    logger.debug("获取模板文件名列表")
     return get_file_names_by_pinyin(TEMPLATES_DIR, filetypes=[".csv", "json"])
 
 
 def get_template_dropdown():
-    logging.debug("获取模板下拉菜单")
+    logger.debug("获取模板下拉菜单")
     template_names = get_template_names()
     return gr.Dropdown.update(choices=template_names)
 
 
 def get_template_content(templates, selection, original_system_prompt):
-    logging.debug(f"应用模板中，选择为{selection}，原始系统提示为{original_system_prompt}")
+    logger.debug(f"应用模板中，选择为{selection}，原始系统提示为{original_system_prompt}")
     try:
         return templates[selection]
     except:
@@ -545,7 +545,7 @@ def get_template_content(templates, selection, original_system_prompt):
 
 
 def reset_textbox():
-    logging.debug("重置文本框")
+    logger.debug("重置文本框")
     return gr.update(value="")
 
 
@@ -558,7 +558,7 @@ def reset_default():
 def change_api_host(host):
     shared.state.set_api_host(host)
     msg = f"API-Host更改为了{host}"
-    logging.info(msg)
+    logger.info(msg)
     return msg
 
 
@@ -566,7 +566,7 @@ def change_proxy(proxy):
     retrieve_proxy(proxy)
     os.environ["HTTPS_PROXY"] = proxy
     msg = f"代理更改为了{proxy}"
-    logging.info(msg)
+    logger.info(msg)
     return msg
 
 
@@ -585,7 +585,7 @@ def hide_middle_chars(s):
 def submit_key(key):
     key = key.strip()
     msg = f"API密钥更改为了{hide_middle_chars(key)}"
-    logging.info(msg)
+    logger.info(msg)
     return key, msg
 
 
@@ -619,7 +619,7 @@ def get_geoip():
         except:
             data = {"error": True, "reason": "连接ipapi失败"}
         if "error" in data.keys():
-            # logging.warning(f"无法获取IP地址信息。\n{data}")
+            # logger.warning(f"无法获取IP地址信息。\n{data}")
             if data["reason"] == "RateLimited":
                 SERVER_GEO_IP_MSG = i18n("您的IP区域：未知。")
             else:
@@ -632,7 +632,7 @@ def get_geoip():
                 SERVER_GEO_IP_MSG = "**您的IP区域：中国。请立即检查代理设置，在不受支持的地区使用API可能导致账号被封禁。**"
             else:
                 SERVER_GEO_IP_MSG = i18n("您的IP区域：") + f"{country}。"
-            logging.info(SERVER_GEO_IP_MSG)
+            logger.info(SERVER_GEO_IP_MSG)
         FETCHING_IP = False
 
     # 设置正在获取IP信息的标志
@@ -661,7 +661,7 @@ def find_n(lst, max_num):
 
 
 def start_outputing():
-    logging.debug("显示取消按钮，隐藏发送按钮")
+    logger.debug("显示取消按钮，隐藏发送按钮")
     return gr.Button.update(visible=False), gr.Button.update(visible=True)
 
 
@@ -673,7 +673,7 @@ def end_outputing():
 
 
 def cancel_outputing():
-    logging.info("中止输出……")
+    logger.info("中止输出……")
     shared.state.interrupt()
 
 
@@ -695,7 +695,7 @@ def update_chuanhu():
     print("[Updater] Trying to update...")
     update_status = background_update()
     if update_status == "success":
-        logging.info("Successfully updated, restart needed")
+        logger.info("Successfully updated, restart needed")
         status = '<span id="update-status" class="hideK">success</span>'
         return gr.Markdown.update(value=i18n("更新成功，请重启本程序") + status)
     else:

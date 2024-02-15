@@ -1,5 +1,5 @@
 from __future__ import annotations
-import logging
+from loguru import logger
 
 from typing import List, Tuple
 from gradio_client import utils as client_utils

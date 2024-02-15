@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 import pdfplumber
-import logging
+from loguru import logger
 from langchain.docstore.document import Document
 
 def prepare_table_config(crop_page):
@@ -79,9 +79,9 @@ def get_column_cropped_pages(pages, two_column=True):
     return new_pages
 
 def parse_pdf(filename, two_column = True):
-    level = logging.getLogger().level
-    if level == logging.getLevelName("DEBUG"):
-        logging.getLogger().setLevel("INFO")
+    level = logger.getLogger().level
+    if level == logger.getLevelName("DEBUG"):
+        logger.getLogger().setLevel("INFO")
 
     with pdfplumber.open(filename) as pdf:
         title, user_info, first_page = get_title_with_cropped_page(pdf.pages[0])
@@ -132,8 +132,8 @@ def parse_pdf(filename, two_column = True):
             chapters.append(cur_chapter)
 
         for i in chapters:
-            logging.info(f"section: {i.name} pages:{i.page_start, i.page_stop} word-count:{len(i.text)}")
-            logging.debug(" ".join(i.text))
+            logger.info(f"section: {i.name} pages:{i.page_start, i.page_stop} word-count:{len(i.text)}")
+            logger.debug(" ".join(i.text))
 
     title = " ".join(title)
     user_info = " ".join(user_info)
@@ -142,7 +142,7 @@ def parse_pdf(filename, two_column = True):
         chapter.name = " ".join(chapter.name)
         text += f"The {idx}th Chapter {chapter.name}: " + " ".join(chapter.text) + "\n"
 
-    logging.getLogger().setLevel(level)
+    logger.getLogger().setLevel(level)
     return Document(page_content=text, metadata={"title": title})
 
 

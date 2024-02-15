@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-import logging
+from loguru import logger
 import traceback
 import base64
 from math import ceil
@@ -103,7 +103,7 @@ class OpenAIVisionClient(BaseLLMModel):
             return base64_image
 
         if is_image_file(filepath):
-            logging.info(f"读取图片文件: {filepath}")
+            logger.info(f"读取图片文件: {filepath}")
             base64_image = image_to_base64(filepath)
             self.images.append({
                 "path": filepath,
@@ -153,7 +153,7 @@ class OpenAIVisionClient(BaseLLMModel):
             try:
                 usage_data = self._get_billing_data(usage_url)
             except Exception as e:
-                # logging.error(f"获取API使用情况失败: " + str(e))
+                # logger.error(f"获取API使用情况失败: " + str(e))
                 if "Invalid authorization header" in str(e):
                     return i18n("**获取API使用情况失败**，需在填写`config.json`中正确填写sensitive_id")
                 elif "Incorrect API key provided: sess" in str(e):
@@ -182,7 +182,7 @@ class OpenAIVisionClient(BaseLLMModel):
         except Exception as e:
             import traceback
             traceback.print_exc()
-            logging.error(i18n("获取API使用情况失败:") + str(e))
+            logger.error(i18n("获取API使用情况失败:") + str(e))
             return STANDARD_ERROR_MSG + ERROR_RETRIEVE_MSG
 
     @shared.state.switching_api_key  # 在不开启多账号模式的时候，这个装饰器不会起作用
@@ -200,7 +200,7 @@ class OpenAIVisionClient(BaseLLMModel):
             self.all_token_counts[-1] += self.image_token
             self.image_token = 0
 
-        logging.debug(colorama.Fore.YELLOW +
+        logger.debug(colorama.Fore.YELLOW +
                       f"{history}" + colorama.Fore.RESET)
         headers = {
             "Content-Type": "application/json",
@@ -236,7 +236,7 @@ class OpenAIVisionClient(BaseLLMModel):
 
         # 如果有自定义的api-host，使用自定义host发送请求，否则使用默认设置发送请求
         if shared.state.chat_completion_url != CHAT_COMPLETION_URL:
-            logging.debug(f"使用自定义API URL: {shared.state.chat_completion_url}")
+            logger.debug(f"使用自定义API URL: {shared.state.chat_completion_url}")
 
         with retrieve_proxy():
             try:
@@ -300,7 +300,7 @@ class OpenAIVisionClient(BaseLLMModel):
                         try:
                             yield chunk["choices"][0]["delta"]["content"]
                         except Exception as e:
-                            # logging.error(f"Error: {e}")
+                            # logger.error(f"Error: {e}")
                             continue
                 except:
                     traceback.print_exc()
@@ -327,7 +327,7 @@ class OpenAIVisionClient(BaseLLMModel):
         }
         # 如果有自定义的api-host，使用自定义host发送请求，否则使用默认设置发送请求
         if shared.state.chat_completion_url != CHAT_COMPLETION_URL:
-            logging.debug(f"使用自定义API URL: {shared.state.chat_completion_url}")
+            logger.debug(f"使用自定义API URL: {shared.state.chat_completion_url}")
 
         with retrieve_proxy():
             response = requests.post(

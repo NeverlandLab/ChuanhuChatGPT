@@ -13,7 +13,7 @@ from urllib.parse import urlencode
 from wsgiref.handlers import format_date_time
 from threading import Condition
 import websocket
-import logging
+from loguru import logger
 
 from .base_model import BaseLLMModel, CallbackToIterator
 

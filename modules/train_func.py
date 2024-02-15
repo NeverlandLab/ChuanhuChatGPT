@@ -1,5 +1,5 @@
 import os
-import logging
+from loguru import logger
 import traceback
 
 from openai import OpenAI
@@ -52,7 +52,7 @@ def excel_to_jsonl(filepath, preview=False):
                         ]
                     })
             else:
-                logging.warning(f"跳过一行数据，因为没有找到提问和答案: {i}")
+                logger.warning(f"跳过一行数据，因为没有找到提问和答案: {i}")
     return formatted_jsonl
 
 def jsonl_save_to_disk(jsonl, filepath):
@@ -74,7 +74,7 @@ def estimate_cost(ds):
 
 
 def handle_dataset_selection(file_src):
-    logging.info(f"Loading dataset {file_src.name}...")
+    logger.info(f"Loading dataset {file_src.name}...")
     preview = ""
     if file_src.name.endswith(".jsonl"):
         with open(file_src.name, "r") as f:
@@ -88,7 +88,7 @@ def handle_dataset_selection(file_src):
 def upload_to_openai(file_src):
     dspath = file_src.name
     msg = ""
-    logging.info(f"Uploading dataset {dspath}...")
+    logger.info(f"Uploading dataset {dspath}...")
     if dspath.endswith(".xlsx"):
         jsonl = excel_to_jsonl(dspath)
         dspath = jsonl_save_to_disk(jsonl, dspath)

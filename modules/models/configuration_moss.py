@@ -1,10 +1,10 @@
 """ Moss model configuration"""
 
-from transformers.utils import logging
+from transformers.utils from loguru import logger
 from transformers.configuration_utils import PretrainedConfig
 
 
-logger = logging.get_logger(__name__)
+logger = logger.get_logger(__name__)
 
 
 class MossConfig(PretrainedConfig):

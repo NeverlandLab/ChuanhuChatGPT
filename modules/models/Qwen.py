@@ -1,7 +1,7 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import os
 from transformers.generation import GenerationConfig
-import logging
+from loguru import logger
 import colorama
 from .base_model import BaseLLMModel
 from ..presets import MODEL_METADATA
@@ -42,7 +42,7 @@ class Qwen_Client(BaseLLMModel):
     def _get_glm_style_input(self):
         history = [x["content"] for x in self.history]
         query = history.pop()
-        logging.debug(colorama.Fore.YELLOW +
+        logger.debug(colorama.Fore.YELLOW +
                       f"{history}" + colorama.Fore.RESET)
         assert (
             len(history) % 2 == 0

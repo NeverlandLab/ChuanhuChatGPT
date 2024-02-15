@@ -1,7 +1,7 @@
 from collections import defaultdict
 from contextlib import contextmanager
 import os
-import logging
+from loguru import logger
 import sys
 import commentjson as json
 import colorama
@@ -57,7 +57,7 @@ show_api_billing = bool(os.environ.get("SHOW_API_BILLING", show_api_billing))
 chat_name_method_index = config.get("chat_name_method_index", 2)
 
 if os.path.exists("api_key.txt"):
-    logging.info("检测到api_key.txt文件，正在进行迁移...")
+    logger.info("检测到api_key.txt文件，正在进行迁移...")
     with open("api_key.txt", "r", encoding="utf-8") as f:
         config["openai_api_key"] = f.read().strip()
     os.rename("api_key.txt", "api_key(deprecated).txt")
@@ -65,7 +65,7 @@ if os.path.exists("api_key.txt"):
         json.dump(config, f, indent=4, ensure_ascii=False)
 
 if os.path.exists("auth.json"):
-    logging.info("检测到auth.json文件，正在进行迁移...")
+    logger.info("检测到auth.json文件，正在进行迁移...")
     auth_list = []
     with open("auth.json", "r", encoding='utf-8') as f:
         auth = json.load(f)
@@ -73,7 +73,7 @@ if os.path.exists("auth.json"):
             if auth[_]["username"] and auth[_]["password"]:
                 auth_list.append((auth[_]["username"], auth[_]["password"]))
             else:
-                logging.error("请检查auth.json文件中的用户名和密码！")
+                logger.error("请检查auth.json文件中的用户名和密码！")
                 sys.exit(1)
     config["users"] = auth_list
     os.rename("auth.json", "auth(deprecated).json")
@@ -99,12 +99,12 @@ else:
 
 if "available_models" in config:
     presets.MODELS = config["available_models"]
-    logging.info(f"已设置可用模型：{config['available_models']}")
+    logger.info(f"已设置可用模型：{config['available_models']}")
 
 # 模型配置
 if "extra_models" in  config:
     presets.MODELS.extend(config["extra_models"])
-    logging.info(f"已添加额外的模型：{config['extra_models']}")
+    logger.info(f"已添加额外的模型：{config['extra_models']}")
 
 HIDE_MY_KEY = config.get("hide_my_key", False)
 
@@ -156,7 +156,7 @@ multi_api_key = config.get("multi_api_key", False)  # 是否开启多账户机�
 if multi_api_key:
     api_key_list = config.get("api_key_list", [])
     if len(api_key_list) == 0:
-        logging.error("多账号模式已开启，但api_key_list为空，请检查config.json")
+        logger.error("多账号模式已开启，但api_key_list为空，请检查config.json")
         sys.exit(1)
     shared.state.set_api_key_queue(api_key_list)
 
@@ -169,7 +169,7 @@ api_host = os.environ.get(
 if api_host is not None:
     shared.state.set_api_host(api_host)
     # os.environ["OPENAI_API_BASE"] = f"{api_host}/v1"
-    logging.info(f"OpenAI API Base set to: {os.environ['OPENAI_API_BASE']}")
+    logger.info(f"OpenAI API Base set to: {os.environ['OPENAI_API_BASE']}")
 
 default_chuanhu_assistant_model = config.get(
     "default_chuanhu_assistant_model", "gpt-3.5-turbo")
@@ -275,7 +275,7 @@ def update_doc_config(two_column_pdf):
     global advance_docs
     advance_docs["pdf"]["two_column"] = two_column_pdf
 
-    logging.info(f"更新后的文件参数为：{advance_docs}")
+    logger.info(f"更新后的文件参数为：{advance_docs}")
 
 
 # 处理gradio.launch参数
@@ -299,9 +299,9 @@ try:
         presets.DEFAULT_MODEL = presets.MODELS.index(default_model)
     else:
         presets.DEFAULT_MODEL = presets.MODELS.index(next((k for k, v in presets.MODEL_METADATA.items() if v.get("model_name") == default_model), None))
-    logging.info("默认模型设置为了：" + str(presets.MODELS[presets.DEFAULT_MODEL]))
+    logger.info("默认模型设置为了：" + str(presets.MODELS[presets.DEFAULT_MODEL]))
 except ValueError:
-    logging.error("你填写的默认模型" + default_model + "不存在！请从下面的列表中挑一个填写：" + str(presets.MODELS))
+    logger.error("你填写的默认模型" + default_model + "不存在！请从下面的列表中挑一个填写：" + str(presets.MODELS))
 
 share = config.get("share", False)
 autobrowser = config.get("autobrowser", True)

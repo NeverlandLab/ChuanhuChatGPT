@@ -1,11 +1,5 @@
-# -*- coding:utf-8 -*-
-import logging
+from loguru import logger
 from auth.auth_builder import AuthBuilder
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s",
-)
 
 from modules.models.models import get_model
 from modules.train_func import *
@@ -17,16 +11,10 @@ from modules.utils import *
 from modules.config import *
 from modules import config
 import gradio as gr
-import colorama
 
-
-logging.getLogger("httpx").setLevel(logging.WARNING)
 
 gr.Chatbot._postprocess_chat_messages = postprocess_chat_messages
 gr.Chatbot.postprocess = postprocess
-
-# with open("web_assets/css/ChuanhuChat.css", "r", encoding="utf-8") as f:
-#     ChuanhuChatCSS = f.read()
 
 
 def create_new_model():
@@ -666,7 +654,7 @@ with gr.Blocks(theme=small_and_beautiful_theme) as gradio_app:
         if (
             hasattr(request, "username") and request.username
         ):  # is not None or is not ""
-            logging.info(f"Get User Name: {request.username}")
+            logger.info(f"Get User Name: {request.username}")
             user_info, user_name = (
                 gr.Markdown.update(value=f"User: {request.username}"),
                 request.username,

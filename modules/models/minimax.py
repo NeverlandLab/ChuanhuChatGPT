@@ -3,7 +3,7 @@ import os
 
 import colorama
 import requests
-import logging
+from loguru import logger
 
 from modules.models.base_model import BaseLLMModel
 from modules.presets import STANDARD_ERROR_MSG, GENERAL_ERROR_MSG, TIMEOUT_STREAMING, TIMEOUT_ALL, i18n
@@ -68,7 +68,7 @@ class MiniMax_Client(BaseLLMModel):
     def _get_response(self, stream=False):
         minimax_api_key = self.api_key
         history = self.history
-        logging.debug(colorama.Fore.YELLOW +
+        logger.debug(colorama.Fore.YELLOW +
                       f"{history}" + colorama.Fore.RESET)
         headers = {
             "Content-Type": "application/json",
@@ -147,7 +147,7 @@ class MiniMax_Client(BaseLLMModel):
                     try:
                         yield chunk["choices"][0]["delta"]
                     except Exception as e:
-                        logging.error(f"Error: {e}")
+                        logger.error(f"Error: {e}")
                         continue
         if error_msg:
             try:
