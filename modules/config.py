@@ -180,7 +180,7 @@ for x in ["GOOGLE_CSE_ID", "GOOGLE_API_KEY", "WOLFRAM_ALPHA_APPID", "SERPAPI_API
 os.environ["KEYCLOAK_AUTH_URL"] = config.get("keycloak_auth_url", "")
 os.environ["KEYCLOAK_CLIENT_ID"] = config.get("keycloak_client_id", "")
 
-os.environ['CW_AUTH_URL'] = config.get('cw_auth_url', '')
+os.environ['SIMPLE_AUTH_URL'] = config.get('simple_auth_url', '')
 
 @contextmanager
 def retrieve_openai_api(api_key=None):

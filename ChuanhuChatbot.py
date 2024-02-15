@@ -1187,17 +1187,18 @@ with gr.Blocks(theme=small_and_beautiful_theme) as gradio_app:
 gradio_app.title = i18n("川虎Chat 🚀")
 
 
-def cw_login(username, password):
+def simple_auth(username, password):
     data = {
         "username": username,
         "password": password,
     }
-    response = requests.post(os.getenv("CW_AUTH_URL"), data=data)
+    response = requests.post(os.getenv("SIMPLE_AUTH_URL"), data=data)
+    response.raise_for_status()
     result = response.json().get("success")
     return result
 
 
-def keycloak_login(username, password):
+def keycloak_auth(username, password):
     data = {
         "client_id": os.getenv("KEYCLOAK_CLIENT_ID"),
         "username": username,
@@ -1205,6 +1206,7 @@ def keycloak_login(username, password):
         "grant_type": "password",
     }
     response = requests.post(os.getenv("KEYCLOAK_AUTH_URL"), data=data)
+    response.raise_for_status()
     token = response.json().get("access_token")
     if token is None:
         logging.info(f"用户[{username}]登录失败")
@@ -1216,13 +1218,18 @@ def keycloak_login(username, password):
 
 def build_auth_func():
     auth_func = None
-    if os.environ["CW_AUTH_URL"] != "":
-        auth_func = cw_login
-    elif os.environ["KEYCLOAK_AUTH_URL"] != "":
-        auth_func = keycloak_login
+    if os.getenv("SIMPLE_AUTH_URL") != "":
+        logging.info("启用简易用户名/密码认证模式")
+        auth_func = simple_auth
+
+    elif os.getenv("KEYCLOAK_AUTH_URL") != "":
+        logging.info("启用KeyCloak认证模式")
+        auth_func = keycloak_auth
     elif authflag:
-        auth_func = auth_from_conf
+        logging.info("启用配置文件用户名/密码认证模式")
+        auth_func = conf_auth
     else:
+        logging.info("没有任何用户认证配置,禁用用户认证校验......")
         auth_func = None
     return auth_func
 

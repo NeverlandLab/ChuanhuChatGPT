@@ -827,7 +827,7 @@ def beautify_err_msg(err_msg):
     return err_msg
 
 
-def auth_from_conf(username, password):
+def conf_auth(username, password):
     try:
         with open("config.json", encoding="utf-8") as f:
             conf = json.load(f)
