@@ -3,6 +3,7 @@ import requests
 
 
 class SimpleAuth:
+    @staticmethod
     def auth(username, password):
         data = {
             "username": username,

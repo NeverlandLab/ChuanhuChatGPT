@@ -5,6 +5,7 @@ import requests
 
 
 class KeyCloakAuth:
+    @staticmethod
     def auth(username, password):
         data = {
             "client_id": os.getenv("KEYCLOAK_CLIENT_ID"),
