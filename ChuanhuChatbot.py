@@ -12,11 +12,13 @@ from modules.config import *
 from modules import config
 import gradio as gr
 
+from ui.chatbot import Chatbot
+
 logger.remove(0)
 logger.add(sys.stderr, level="INFO")
 
-gr.Chatbot._postprocess_chat_messages = postprocess_chat_messages
-gr.Chatbot.postprocess = postprocess
+chatbot = Chatbot()
+chatbot.setup_ui()
 
 
 def create_new_model():

@@ -239,95 +239,6 @@ def convert_mdtext(md_text):  # deprecated
     return output
 
 
-def clip_rawtext(chat_message, need_escape=True):
-    # first, clip hr line
-    hr_pattern = r'\n\n<hr class="append-display no-in-raw" />(.*?)'
-    hr_match = re.search(hr_pattern, chat_message, re.DOTALL)
-    message_clipped = chat_message[: hr_match.start()] if hr_match else chat_message
-    # second, avoid agent-prefix being escaped
-    agent_prefix_pattern = (
-        r'(<!-- S O PREFIX -->.*?<!-- E O PREFIX -->)'
-    )
-    # agent_matches = re.findall(agent_prefix_pattern, message_clipped)
-    agent_parts = re.split(agent_prefix_pattern, message_clipped, flags=re.DOTALL)
-    final_message = ""
-    for i, part in enumerate(agent_parts):
-        if i % 2 == 0:
-            if part != "" and part != "\n":
-                final_message += (
-                    f'<pre class="fake-pre">{escape_markdown(part)}</pre>'
-                    if need_escape
-                    else f'<pre class="fake-pre">{part}</pre>'
-                )
-        else:
-            part = part.replace(' data-fancybox="gallery"', '')
-            final_message += part
-    return final_message
-
-
-def convert_bot_before_marked(chat_message):
-    """
-    注意不能给输出加缩进, 否则会被marked解析成代码块
-    """
-    if '<div class="md-message">' in chat_message:
-        return chat_message
-    else:
-        raw = f'<div class="raw-message hideM">{clip_rawtext(chat_message)}</div>'
-        # really_raw = f'{START_OF_OUTPUT_MARK}<div class="really-raw hideM">{clip_rawtext(chat_message, need_escape=False)}\n</div>{END_OF_OUTPUT_MARK}'
-
-        code_block_pattern = re.compile(r"```(.*?)(?:```|$)", re.DOTALL)
-        code_blocks = code_block_pattern.findall(chat_message)
-        non_code_parts = code_block_pattern.split(chat_message)[::2]
-        result = []
-        for non_code, code in zip(non_code_parts, code_blocks + [""]):
-            if non_code.strip():
-                result.append(non_code)
-            if code.strip():
-                code = f"\n```{code}\n```"
-                result.append(code)
-        result = "".join(result)
-        md = f'<div class="md-message">\n\n{result}\n</div>'
-        return raw + md
-
-
-def convert_user_before_marked(chat_message):
-    if '<div class="user-message">' in chat_message:
-        return chat_message
-    else:
-        return f'<div class="user-message">{escape_markdown(chat_message)}</div>'
-
-
-def escape_markdown(text):
-    """
-    Escape Markdown special characters to HTML-safe equivalents.
-    """
-    escape_chars = {
-        # ' ': '&nbsp;',
-        "_": "&#95;",
-        "*": "&#42;",
-        "[": "&#91;",
-        "]": "&#93;",
-        "(": "&#40;",
-        ")": "&#41;",
-        "{": "&#123;",
-        "}": "&#125;",
-        "#": "&#35;",
-        "+": "&#43;",
-        "-": "&#45;",
-        ".": "&#46;",
-        "!": "&#33;",
-        "`": "&#96;",
-        ">": "&#62;",
-        "<": "&#60;",
-        "|": "&#124;",
-        "$": "&#36;",
-        ":": "&#58;",
-        "\n": "<br>",
-    }
-    text = text.replace("    ", "&nbsp;&nbsp;&nbsp;&nbsp;")
-    return "".join(escape_chars.get(c, c) for c in text)
-
-
 def convert_asis(userinput):  # deprecated
     return (
         f'<p style="white-space:pre-wrap;">{html.escape(userinput)}</p>'
@@ -503,7 +414,9 @@ def filter_history(user_name, keyword):
 
 
 def load_template(filename, mode=0):
-    logger.debug(f"加载模板文件{filename}，模式为{mode}（0为返回字典和下拉菜单，1为返回下拉菜单，2为返回字典）")
+    logger.debug(
+        f"加载模板文件{filename}，模式为{mode}（0为返回字典和下拉菜单，1为返回下拉菜单，2为返回字典）"
+    )
     lines = []
     if filename.endswith(".json"):
         with open(os.path.join(TEMPLATES_DIR, filename), "r", encoding="utf8") as f:
@@ -537,7 +450,9 @@ def get_template_dropdown():
 
 
 def get_template_content(templates, selection, original_system_prompt):
-    logger.debug(f"应用模板中，选择为{selection}，原始系统提示为{original_system_prompt}")
+    logger.debug(
+        f"应用模板中，选择为{selection}，原始系统提示为{original_system_prompt}"
+    )
     try:
         return templates[selection]
     except:
@@ -624,7 +539,9 @@ def get_geoip():
                 SERVER_GEO_IP_MSG = i18n("您的IP区域：未知。")
             else:
                 SERVER_GEO_IP_MSG = (
-                    i18n("获取IP地理位置失败。原因：") + f"{data['reason']}" + i18n("。你仍然可以使用聊天功能。")
+                    i18n("获取IP地理位置失败。原因：")
+                    + f"{data['reason']}"
+                    + i18n("。你仍然可以使用聊天功能。")
                 )
         else:
             country = data["country_name"]
@@ -908,11 +825,24 @@ class SetupWizard:
     def __init__(self, file_path="config.json") -> None:
         self.config = {}
         self.file_path = file_path
-        language = input('请问是否需要更改语言？可选："auto", "zh_CN", "en_US", "ja_JP", "ko_KR", "sv_SE", "ru_RU", "vi_VN"\nChange the language? Options: "auto", "zh_CN", "en_US", "ja_JP", "ko_KR", "sv_SE", "ru_RU", "vi_VN"\n目前正在使用中文(zh_CN)\nCurrently using Chinese(zh_CN)\n如果需要，请输入你想用的语言的代码：\nIf you need, please enter the code of the language you want to use:')
-        if language.lower() in ["auto", "zh_cn", "en_us", "ja_jp", "ko_kr", "sv_se", "ru_ru", "vi_vn"]:
+        language = input(
+            '请问是否需要更改语言？可选："auto", "zh_CN", "en_US", "ja_JP", "ko_KR", "sv_SE", "ru_RU", "vi_VN"\nChange the language? Options: "auto", "zh_CN", "en_US", "ja_JP", "ko_KR", "sv_SE", "ru_RU", "vi_VN"\n目前正在使用中文(zh_CN)\nCurrently using Chinese(zh_CN)\n如果需要，请输入你想用的语言的代码：\nIf you need, please enter the code of the language you want to use:'
+        )
+        if language.lower() in [
+            "auto",
+            "zh_cn",
+            "en_us",
+            "ja_jp",
+            "ko_kr",
+            "sv_se",
+            "ru_ru",
+            "vi_vn",
+        ]:
             i18n.change_language(language)
         else:
-            print("你没有输入有效的语言代码，将使用默认语言中文(zh_CN)\nYou did not enter a valid language code, the default language Chinese(zh_CN) will be used.")
+            print(
+                "你没有输入有效的语言代码，将使用默认语言中文(zh_CN)\nYou did not enter a valid language code, the default language Chinese(zh_CN) will be used."
+            )
         print(
             i18n("正在进行首次设置，请按照提示进行配置，配置将会被保存在")
             + colorama.Fore.GREEN
@@ -932,7 +862,9 @@ class SetupWizard:
         )
         print(
             colorama.Back.GREEN
-            + i18n("现在开始进行交互式配置。碰到不知道该怎么办的设置项时，请直接按回车键跳过，程序会自动选择合适的默认值。")
+            + i18n(
+                "现在开始进行交互式配置。碰到不知道该怎么办的设置项时，请直接按回车键跳过，程序会自动选择合适的默认值。"
+            )
             + colorama.Style.RESET_ALL
         )
 
@@ -971,7 +903,8 @@ class SetupWizard:
                     config_value = []
                     while True:
                         config_value_item = input(
-                            generate_prompt_string(config_item) + i18n("，输入空行结束：")
+                            generate_prompt_string(config_item)
+                            + i18n("，输入空行结束：")
                         )
                         if config_value_item == "":
                             break
@@ -998,7 +931,13 @@ class SetupWizard:
 
     def set_users(self):
         # 询问设置用户账户
-        choice = input(colorama.Fore.YELLOW + i18n("是否设置用户账户？设置后，用户需要登陆才可访问。输入 Yes(y) 或 No(n)，默认No：") + colorama.Style.RESET_ALL)
+        choice = input(
+            colorama.Fore.YELLOW
+            + i18n(
+                "是否设置用户账户？设置后，用户需要登陆才可访问。输入 Yes(y) 或 No(n)，默认No："
+            )
+            + colorama.Style.RESET_ALL
+        )
         if choice.lower() in ["y", "yes"]:
             users = []
             while True:
@@ -1069,7 +1008,9 @@ def setup_wizard():
             "是否在本地编制知识库索引？如果是，可以在使用本地模型时离线使用知识库，否则使用OpenAI服务来编制索引（需要OpenAI API Key）。请确保你的电脑有至少16GB内存。本地索引模型需要从互联网下载。",
         )
         print(
-            colorama.Back.GREEN + i18n("现在开始设置其他在线模型的API Key") + colorama.Style.RESET_ALL
+            colorama.Back.GREEN
+            + i18n("现在开始设置其他在线模型的API Key")
+            + colorama.Style.RESET_ALL
         )
         # Google Palm
         wizard.set(
@@ -1104,7 +1045,9 @@ def setup_wizard():
             [
                 ConfigItem(
                     "midjourney_proxy_api_base",
-                    i18n("你的") + "https://github.com/novicezk/midjourney-proxy" + i18n("代理地址"),
+                    i18n("你的")
+                    + "https://github.com/novicezk/midjourney-proxy"
+                    + i18n("代理地址"),
                     type=ConfigType.String,
                 ),
                 ConfigItem(
@@ -1133,7 +1076,9 @@ def setup_wizard():
                 ConfigItem(
                     "spark_api_secret", "讯飞星火 API Secret", type=ConfigType.Password
                 ),
-                ConfigItem("spark_api_key", "讯飞星火 API Key", type=ConfigType.Password),
+                ConfigItem(
+                    "spark_api_key", "讯飞星火 API Key", type=ConfigType.Password
+                ),
             ],
             "是否设置讯飞星火？如果设置，软件启动时会自动加载该API Key，无需在 UI 中手动输入。如果不设置，将无法使用 讯飞星火 模型。请注意不要搞混App ID和API Secret。",
         )
@@ -1150,10 +1095,14 @@ def setup_wizard():
         wizard.set(
             [
                 ConfigItem(
-                    "ernie_api_key", "百度云中的文心一言 API Key", type=ConfigType.Password
+                    "ernie_api_key",
+                    "百度云中的文心一言 API Key",
+                    type=ConfigType.Password,
                 ),
                 ConfigItem(
-                    "ernie_secret_key", "百度云中的文心一言 Secret Key", type=ConfigType.Password
+                    "ernie_secret_key",
+                    "百度云中的文心一言 Secret Key",
+                    type=ConfigType.Password,
                 ),
             ],
             "是否设置文心一言？如果设置，软件启动时会自动加载该API Key，无需在 UI 中手动输入。如果不设置，将无法使用 文心一言 模型。",
@@ -1195,7 +1144,9 @@ def setup_wizard():
             "是否设置 Azure OpenAI？如果设置，软件启动时会自动加载该API Key，无需在 UI 中手动输入。如果不设置，将无法使用 Azure OpenAI 模型。",
         )
         print(
-            colorama.Back.GREEN + i18n("现在开始进行软件功能设置") + colorama.Style.RESET_ALL
+            colorama.Back.GREEN
+            + i18n("现在开始进行软件功能设置")
+            + colorama.Style.RESET_ALL
         )
         # 用户列表
         wizard.set_users()
@@ -1214,7 +1165,10 @@ def setup_wizard():
         wizard.set(
             [
                 ConfigItem(
-                    "check_update", "是否启用检查更新", type=ConfigType.Bool, default=True
+                    "check_update",
+                    "是否启用检查更新",
+                    type=ConfigType.Bool,
+                    default=True,
                 )
             ],
             "是否启用检查更新？如果设置，软件启动时会自动检查更新。",
@@ -1388,10 +1342,16 @@ def setup_wizard():
             "是否通过gradio分享？可以通过公网访问。",
         )
         wizard.save()
-        print(colorama.Back.GREEN + i18n("设置完成。现在请重启本程序。") + colorama.Style.RESET_ALL)
+        print(
+            colorama.Back.GREEN
+            + i18n("设置完成。现在请重启本程序。")
+            + colorama.Style.RESET_ALL
+        )
         exit()
+
 
 def reboot_chuanhu():
     import sys
+
     print(colorama.Back.GREEN + i18n("正在尝试重启...") + colorama.Style.RESET_ALL)
     os.execl(sys.executable, sys.executable, *sys.argv)
