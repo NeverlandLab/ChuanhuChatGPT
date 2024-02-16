@@ -7,7 +7,7 @@ from gradio import utils
 
 
 class Chatbot:
-    def setup_ui(self):
+    def setup(self):
         gr.Chatbot.postprocess = self.postprocess
 
     def postprocess_chat_messages(

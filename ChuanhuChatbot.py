@@ -1,6 +1,7 @@
 from loguru import logger
 from auth.auth_builder import AuthBuilder
 
+
 from modules.models.models import get_model
 from modules.train_func import *
 from modules.repo import *
@@ -16,14 +17,6 @@ from ui.chatbot import Chatbot
 
 logger.remove(0)
 logger.add(sys.stderr, level="INFO")
-
-chatbot = Chatbot()
-chatbot.setup_ui()
-
-
-def create_new_model():
-    return get_model(model_name=MODELS[DEFAULT_MODEL], access_key=my_api_key)[0]
-
 
 with gr.Blocks(theme=small_and_beautiful_theme) as gradio_app:
     user_name = gr.Textbox("", visible=False)
@@ -1180,6 +1173,9 @@ with gr.Blocks(theme=small_and_beautiful_theme) as gradio_app:
 if __name__ == "__main__":
     gradio_app.title = i18n("川虎Chat 🚀")
 
+    chatbot = Chatbot()
+    chatbot.setup()
+    
     reload_javascript()
     setup_wizard()
 
