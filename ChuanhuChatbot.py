@@ -12,6 +12,8 @@ from modules.config import *
 from modules import config
 import gradio as gr
 
+logger.remove(0)
+logger.add(sys.stderr, level="INFO")
 
 gr.Chatbot._postprocess_chat_messages = postprocess_chat_messages
 gr.Chatbot.postprocess = postprocess
