@@ -1,3 +1,4 @@
+loguru==0.7.2
 gradio==3.44.0
 gradio[oauth]
 gradio_client==0.5.0
