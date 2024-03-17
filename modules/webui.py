@@ -52,6 +52,11 @@ def list_scripts(scriptdirname, extension):
 
 
 def reload_javascript():
+    js = javascript_html()
+    js += '<script async type="module" src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>'
+    js += '<script async type="module" src="https://spin.js.org/spin.umd.js"></script><link type="text/css" href="https://spin.js.org/spin.css" rel="stylesheet" />'
+    js += '<script async src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css" />'
+    
     meta = """
         <meta name="apple-mobile-web-app-title" content="川虎 Chat">
         <meta name="apple-mobile-web-app-capable" content="yes">
@@ -64,13 +69,12 @@ def reload_javascript():
         
         <link rel="manifest" href="/file=web_assets/manifest.json" crossorigin="use-credentials">
     """
-
-    js = javascript_html()
     css = css_html()
 
     def template_response(*args, **kwargs):
         res = GradioTemplateResponseOriginal(*args, **kwargs)
         res.body = res.body.replace(b'</head>', f'{meta}{js}</head>'.encode("utf8"))
+        # res.body = res.body.replace(b'</head>', f'{js}</head>'.encode("utf8"))
         res.body = res.body.replace(b'</body>', f'{css}</body>'.encode("utf8"))
         res.init_headers()
         return res
