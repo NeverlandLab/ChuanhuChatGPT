@@ -1,5 +1,8 @@
 # -*- coding:utf-8 -*-
 import logging
+
+from auth.auth_builder import AuthBuilder
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s",
@@ -820,13 +823,14 @@ demo.title = i18n("川虎Chat 🚀")
 if __name__ == "__main__":
     reload_javascript()
     setup_wizard()
+    auth_builder = AuthBuilder()
     demo.queue(concurrency_count=CONCURRENT_COUNT).launch(
         allowed_paths=["history", "web_assets"],
         blocked_paths=["config.json", "files", "models", "lora", "modules"],
         server_name=server_name,
         server_port=server_port,
         share=share,
-        auth=auth_from_conf if authflag else None,
+        auth=auth_builder.build(),
         favicon_path="./web_assets/favicon.ico",
         inbrowser=autobrowser and not dockerflag,  # 禁止在docker下开启inbrowser
     )
